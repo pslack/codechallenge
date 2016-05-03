@@ -65,20 +65,20 @@ public class SlackerTestMethod extends AbstractSearchEngine
     /**
      * model names by manufacturer index mapping
      */
-    private final HashMap<String, HashMap<String, String>> modelByMfgMap = new HashMap<String, HashMap<String, String>>();
+    private final HashMap<String, HashMap<String, String>> modelByMfgMap = new HashMap<>();
 
     /**
      * for each regex pointer ( manufacturer @ family @ model ) a hashset of regular
      * search expressions to use to match model identifiers in a text string
      */
-    private final HashMap<String,HashSet<String>> modelSearchRegex = new HashMap<String, HashSet<String>>();
+    private final HashMap<String,HashSet<String>> modelSearchRegex = new HashMap<>();
     
 
     /**
      * in our input products it is possible that models are duplicated across
      * families or are in error
      */
-    private final HashMap<String, String> duplicateModelList = new HashMap<String, String>();
+    private final HashMap<String, String> duplicateModelList = new HashMap<>();
 
     /**
      * collection of unique cases where an alias or initial can be used for a
@@ -86,27 +86,27 @@ public class SlackerTestMethod extends AbstractSearchEngine
      * from the given list
      *
      */
-    private final HashMap<String, String> aliasMfgMap = new HashMap<String, String>();
+    private final HashMap<String, String> aliasMfgMap = new HashMap<>();
 
     /**
      * this maps model name / manufacturer to a family
      */
-    private final HashMap<String, HashMap<String, String>> modelByProductFamily = new HashMap<String, HashMap<String, String>>();
+    private final HashMap<String, HashMap<String, String>> modelByProductFamily = new HashMap<>();
 
     /**
      * Maps a product family to manufacturer
      */
-    private final HashMap<String, String> mfgByProductFamily = new HashMap<String, String>();
+    private final HashMap<String, String> mfgByProductFamily = new HashMap<>();
 
     /**
      * Unmatched listings
      */
-    HashMap<String, JsonObject> unMatched = new HashMap<String, JsonObject>();
+    HashMap<String, JsonObject> unMatched = new HashMap<>();
 
     /**
      * Matched listings
      */
-    HashMap<String, ArrayList<JsonObject>> matchedList = new HashMap<String, ArrayList<JsonObject>>();
+    HashMap<String, ArrayList<JsonObject>> matchedList = new HashMap<>();
 
     /** this umber of unmatched listings */
     private int numUnmatched=0;
@@ -195,19 +195,17 @@ public class SlackerTestMethod extends AbstractSearchEngine
      */
     private void buildObjectRelationMaps()
     {
-        for (String key : myCodeChallenge.getProductKeys().keySet())
+        myCodeChallenge.getProductKeys().keySet().stream().forEach((key) ->
         {
             JsonObject j = myCodeChallenge.getProductKeys().get(key);
             //the first conditioning is to convert to uppser case
             String conditionedMfg = conditionMfgString(j.getString(CodeChallenge.PRODUCT_MANUFACTURER_KEY));
             String conditionedModel = conditionModelString(j.getString(CodeChallenge.PRODUCT_MODEL_KEY));
             String family = conditionFamilyString(j.getString(CodeChallenge.PRODUCT_FAMILY_KEY, null));
-
             //build the model regex map
             String regexfam="";
             if(family!=null)
                 regexfam=family;
-            
             //build a key we can use to store regex model findall strings
             String regexKey=conditionedMfg+"@"+regexfam+"@"+conditionedModel;
             if (modelSearchRegex.containsKey(regexKey))
@@ -219,13 +217,12 @@ public class SlackerTestMethod extends AbstractSearchEngine
 
                 //every model include a basic match case as given in the table
                 String basicSearch = "(?s).*\\b"+j.getString(CodeChallenge.PRODUCT_MODEL_KEY).toUpperCase()+"\\b.*";
-                HashSet<String> al = new HashSet<String>();
+                HashSet<String> al = new HashSet<>();
                 al.add(basicSearch);
                 //add a search based on our conditioned model string
                 al.add("(?s).*\\b"+conditionedModel +"\\b.*");
                 modelSearchRegex.put(regexKey, al);
             }
-           
             if (modelByMfgMap.containsKey(conditionedMfg))
             {
                 HashMap<String, String> models = modelByMfgMap.get(conditionedMfg);
@@ -245,21 +242,18 @@ public class SlackerTestMethod extends AbstractSearchEngine
                 }
             } else
             {
-                HashMap<String, String> models = new HashMap<String, String>();
+                HashMap<String, String> models = new HashMap<>();
 
                 models.put(conditionedModel, key);
 
                 modelByMfgMap.put(conditionedMfg, models);
-
             }
-
             //add the family to manufacturer mapping
             if (family != null)
             {
-
                 if (!modelByProductFamily.containsKey(family))
                 {
-                    HashMap<String, String> mod = new HashMap<String, String>();
+                    HashMap<String, String> mod = new HashMap<>();
                     mod.put(conditionedModel, key);
                     modelByProductFamily.put(family, mod);
                     mfgByProductFamily.put(family, conditionedMfg);
@@ -269,12 +263,11 @@ public class SlackerTestMethod extends AbstractSearchEngine
                     mfgByProductFamily.put(family, conditionedMfg);
                 }
             }
-
-        }
+        });
 
         //process the duplicate list here we see if a model has
         //the same value in 2 families, if not we log the error
-        for (String dup : duplicateModelList.keySet())
+        duplicateModelList.keySet().stream().forEach((dup) ->
         {
             JsonObject j = myCodeChallenge.getProductKeys().get(duplicateModelList.get(dup));
             String fam = conditionFamilyString(j.getString(CodeChallenge.PRODUCT_FAMILY_KEY, null));
@@ -293,12 +286,12 @@ public class SlackerTestMethod extends AbstractSearchEngine
                 modelByProductFamily.get(fam).put(dup, pkey);
             } else
             {
-                HashMap<String, String> o = new HashMap<String, String>();
+                HashMap<String, String> o = new HashMap<>();
                 o.put(dup, pkey);
                 modelByProductFamily.put(fam, o);
                 mfgByProductFamily.put(fam, Mfg);
             }
-        }
+        });
         //set up the generic model search regexs
         buildGenericModelModifierMap();
 
@@ -315,44 +308,38 @@ public class SlackerTestMethod extends AbstractSearchEngine
      */
     private void buildGenericModelModifierMap()
     {
-        //for all manufacturers 
-        for (String mfgKey : modelByMfgMap.keySet())
+        //for all manufacturers
+        modelByMfgMap.keySet().stream().forEach((mfgKey) ->
         {
             //split model names into 2 and populate buckets
             //the bucket that has more than one match is a generic model modifier
 
-            HashMap<String,String> list0 = new HashMap<String,String>();
-            HashMap<String,HashSet<String>> list1 = new HashMap<String,HashSet<String>>();
-            HashMap<String,HashSet<String>> list2 = new HashMap<String,HashSet<String>>();
-            HashMap<String,HashSet<String>> list3 = new HashMap<String,HashSet<String>>();
-            HashMap<String,HashSet<String>> list4 = new HashMap<String,HashSet<String>>();
-            HashMap<String,HashSet<String>> prefixModifiers = new HashMap<String,HashSet<String>>();
-            HashMap<String,HashSet<String>> suffixModifiers = new HashMap<String,HashSet<String>>();
-
+            HashMap<String,String> list0 = new HashMap<>();
+            HashMap<String,HashSet<String>> list1 = new HashMap<>();
+            HashMap<String,HashSet<String>> list2 = new HashMap<>();
+            HashMap<String,HashSet<String>> list3 = new HashMap<>();
+            HashMap<String,HashSet<String>> list4 = new HashMap<>();
+            HashMap<String,HashSet<String>> prefixModifiers = new HashMap<>();
+            HashMap<String,HashSet<String>> suffixModifiers = new HashMap<>();
+            
             
             //for all models
             HashMap<String, String> modelMap = modelByMfgMap.get(mfgKey);
             //for all models
-            for (String modelKey : modelMap.keySet())
+            modelMap.keySet().stream().forEach((modelKey) ->
             {
                 //let's first detect any prefix separatos (space and - )'
                 JsonObject prod = myCodeChallenge.getProductKeys().get(modelMap.get(modelKey));
                 String rawProduct = prod.getString(CodeChallenge.PRODUCT_MODEL_KEY);
                 String family = conditionFamilyString(prod.getString(CodeChallenge.PRODUCT_FAMILY_KEY,""));
-                
                 String regexPointer = mfgKey+"@"+family+"@"+modelKey;
-                
                 //we only care about spaces and dashes as separators
                 String[] split = rawProduct.split("[-_ ]");
-
-                
-                
                 if (split.length == 1)
                 {
                     
                     list0.put(modelKey,regexPointer);
                 }
-                
                 if (split.length >= 2)
                 {
                     HashSet<String> regexs;
@@ -366,12 +353,11 @@ public class SlackerTestMethod extends AbstractSearchEngine
                         
                     } else
                     {
-                        HashSet<String> regexPointers = new HashSet<String>();
+                        HashSet<String> regexPointers = new HashSet<>();
                         regexPointers.add(regexPointer);
                         list1.put(split[0], regexPointers);
                     }
                 }
-                
                 if (split.length == 2)
                 {
 
@@ -383,7 +369,7 @@ public class SlackerTestMethod extends AbstractSearchEngine
                         suffixModifiers.put(conditionModelString(split[1]),regexPointers);
                     } else
                     {
-                        HashSet<String> regexPointers = new HashSet<String>();
+                        HashSet<String> regexPointers = new HashSet<>();
                         regexPointers.add(regexPointer);
                         list2.put(split[1], regexPointers);
                     }
@@ -399,7 +385,7 @@ public class SlackerTestMethod extends AbstractSearchEngine
                         suffixModifiers.put(conditionModelString(split[2]),regexPointers);
                     } else
                     {
-                        HashSet<String> regexPointers = new HashSet<String>();
+                        HashSet<String> regexPointers = new HashSet<>();
                         regexPointers.add(regexPointer);
                         list3.put(split[2],regexPointers);
                     }
@@ -416,35 +402,30 @@ public class SlackerTestMethod extends AbstractSearchEngine
                         suffixModifiers.put(conditionModelString(split[3]),regexPointers);
                     } else
                     {
-                        HashSet<String> regexPointers = new HashSet<String>();
+                        HashSet<String> regexPointers = new HashSet<>();
                         regexPointers.add(regexPointer);
                         list4.put(split[3],regexPointers);
                     }
-
                 }
-
-            } //end of first pass
-
-
-            //we will look into madels that are not split to find any common prefixxes or suffixes
-            HashMap<String,HashSet<String>> beginningSet = new HashMap<String,HashSet<String>>();
-            HashMap<String,HashSet<String>> endingSet = new HashMap<String,HashSet<String>>();
-
+            }); //end of first pass
             
-            //this is for everything remaining that does not have a seprator 
+            
+            //we will look into madels that are not split to find any common prefixxes or suffixes
+            HashMap<String,HashSet<String>> beginningSet = new HashMap<>();
+            HashMap<String,HashSet<String>> endingSet = new HashMap<>();
+            
+            
+            //this is for everything remaining that does not have a seprator
             //we want to look for alpha patterns on the ends or beginning of model strings
             //to discover new generic model prefix / suffix we are only interesed in alpha
             //prefix and suffix
-            for (String test2 : list0.keySet())
+            list0.keySet().stream().forEach((test2) ->
             {
                 //remove all numbers
                 String alpha = test2.replaceAll("[^a-zA-Z]","");
                 //remove all alpha
                 String number = test2.replaceAll("[^0-9]","");
-                
-
                 String regexPointer = list0.get(test2);
-                
                 boolean beginsAlpha = test2.matches("^" + alpha + ".*$");
                 boolean endsAlpha = test2.matches("^.*" + alpha + "$");
                 if (beginsAlpha && !endsAlpha)
@@ -476,63 +457,49 @@ public class SlackerTestMethod extends AbstractSearchEngine
                         endingSet.put(alpha,regexPointers);
                     }
                 }
-                
-            }
+            });
 
-            for (String keys : prefixModifiers.keySet())
+            prefixModifiers.keySet().stream().filter((keys) -> (keys.matches("\\D.*$"))).forEach((keys) ->
             {
-                //only alpha
-                if(keys.matches("\\D.*$"))
+                HashSet<String> RegexPointers = prefixModifiers.get(keys);
+                //add new search regexs for each prefix
+                RegexPointers.stream().forEach((regexPointer) ->
                 {
-                    HashSet<String> RegexPointers = prefixModifiers.get(keys);
-                    //add new search regexs for each prefix
-                    for(String regexPointer : RegexPointers)
-                    {
-                        
-                        HashSet<String> regexes = modelSearchRegex.get(regexPointer);
-                        
-                        String model =  getModelFromRegexPointer( regexPointer);
-                        String post = model.replaceAll("^" + keys, "");
-                        
-                        String basicHyphenSearch = "(?s).*\\b"+keys+"-"+post+"\\b.*";
-                        String basicWhiteSpaceSearch = "(?s).*\\b"+keys+"\\s+"+post+"\\b.*";
-                        
-                        regexes.add(basicHyphenSearch);
-                        regexes.add(basicWhiteSpaceSearch);
-                        
-                        modelSearchRegex.put(regexPointer, regexes);
-                    }
-                }
-            }
-            
-            for (String keys : suffixModifiers.keySet())
+                    HashSet<String> regexes = modelSearchRegex.get(regexPointer);
+                    
+                    String model =  getModelFromRegexPointer( regexPointer);
+                    String post = model.replaceAll("^" + keys, "");
+                    
+                    String basicHyphenSearch = "(?s).*\\b"+keys+"-"+post+"\\b.*";
+                    String basicWhiteSpaceSearch = "(?s).*\\b"+keys+"\\s+"+post+"\\b.*";
+                    
+                    regexes.add(basicHyphenSearch);
+                    regexes.add(basicWhiteSpaceSearch);
+                    
+                    modelSearchRegex.put(regexPointer, regexes);
+                });
+            }); //only alpha
+            suffixModifiers.keySet().stream().filter((keys) -> (keys.matches("\\D.*$"))).forEach((keys) ->
             {
-                //only alpha prefixes allowed
-                if(keys.matches("\\D.*$"))
+                HashSet<String> RegexPointers = suffixModifiers.get(keys);
+                //add new search reges for each suffix discovered
+                RegexPointers.stream().forEach((regexPointer) ->
                 {
-                    HashSet<String> RegexPointers = suffixModifiers.get(keys);
-                    //add new search reges for each suffix discovered
-                    for(String regexPointer : RegexPointers)
-                    {
-                        
-                        HashSet<String> regexes = modelSearchRegex.get(regexPointer);
-                        
-                        String model =  getModelFromRegexPointer( regexPointer);
-                        String pre = model.replaceAll(keys+"$","");
-                        
-                        String basicHyphenSearch = "(?s).*\\b"+pre+"-"+keys+"\\b.*";
-                        String basicWhiteSpaceSearch = "(?s).*\\b"+pre+"\\s+"+keys+"\\b.*";
-                        
-                        regexes.add(basicHyphenSearch);
-                        regexes.add(basicWhiteSpaceSearch);
-                        
-                        modelSearchRegex.put(regexPointer, regexes);
-                    }
-
-                }
-            }
-
-        }
+                    HashSet<String> regexes = modelSearchRegex.get(regexPointer);
+                    
+                    String model =  getModelFromRegexPointer( regexPointer);
+                    String pre = model.replaceAll(keys+"$","");
+                    
+                    String basicHyphenSearch = "(?s).*\\b"+pre+"-"+keys+"\\b.*";
+                    String basicWhiteSpaceSearch = "(?s).*\\b"+pre+"\\s+"+keys+"\\b.*";
+                    
+                    regexes.add(basicHyphenSearch);
+                    regexes.add(basicWhiteSpaceSearch);
+                    
+                    modelSearchRegex.put(regexPointer, regexes);
+                });
+            }); //only alpha prefixes allowed
+        });
 
 
 
@@ -628,7 +595,7 @@ public class SlackerTestMethod extends AbstractSearchEngine
                     numMatched++;
                 } else
                 {
-                    ArrayList<JsonObject> no = new ArrayList<JsonObject>();
+                    ArrayList<JsonObject> no = new ArrayList<>();
                     no.add(myobj);
                     matchedList.put(productName, no);
                     numMatched++;
@@ -708,10 +675,9 @@ public class SlackerTestMethod extends AbstractSearchEngine
         if(modelRegex == null)
             return false;
         
-        for(String reg:modelRegex)
+        if (modelRegex.stream().anyMatch((reg) -> (titleC.matches(reg))))
         {
-            if(titleC.matches(reg))
-                return true;
+            return true;
         }
         
         return false;
@@ -719,7 +685,7 @@ public class SlackerTestMethod extends AbstractSearchEngine
     
     /** This is a debugging set to look at what we didn't match when 
      we were clearly given the manufacturer and the Family code */
-    HashSet<String> whyNoMatch = new HashSet<String>();
+    HashSet<String> whyNoMatch = new HashSet<>();
 
     /**
      * This function matches all models for given manufacturer and or family type
@@ -861,11 +827,8 @@ public class SlackerTestMethod extends AbstractSearchEngine
  
         HashMap<String,ArrayList<JsonObject>> duplicates = myCodeChallenge.getDuplicateListings();
         
-        for(String matchKey:matchedList.keySet())
+        matchedList.keySet().stream().map((matchKey) -> matchedList.get(matchKey)).map((matches) -> matches.listIterator()).forEach((iterator) ->
         {
-            ArrayList<JsonObject> matches = matchedList.get(matchKey);
-            ListIterator<JsonObject> iterator =  matches.listIterator();
-            
             while(iterator.hasNext())
             {
                 JsonObject listingMatch = iterator.next();
@@ -873,13 +836,17 @@ public class SlackerTestMethod extends AbstractSearchEngine
                 if(duplicates.containsKey(searchKey))
                 {
                     ArrayList<JsonObject> othermatches = duplicates.get(searchKey);
-                    for(JsonObject othermatch:othermatches){
+                    othermatches.stream().map((othermatch) ->
+                    {
                         iterator.add(othermatch);
+                        return othermatch;
+                    }).forEach((_item) ->
+                    {
                         numDuplicateMatches++;
-                    }
+                    });
                 }
             }
-        }
+        });
  
     }
 

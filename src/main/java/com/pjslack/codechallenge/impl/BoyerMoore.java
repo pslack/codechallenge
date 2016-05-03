@@ -19,9 +19,10 @@ package com.pjslack.codechallenge.impl;
 /**
  *
  * Generic Boyer-Moore algorithm taken from
- * @see <a href="https://en.wikipedia.org/wiki/Boyer-Moore_string_search_algorithm">Boyer-Moore algorithm</a>
+ * @see <a href="https://en.wikipedia.org/wiki/Boyer-Moore_string_search_algorithm" >Boyer-Moore algorithm</a>
  * 
- * 
+ * This is currently unused but is here for future updates
+ * TODO:// test these methods to see if we get speed gain
  * 
  */
 public class BoyerMoore

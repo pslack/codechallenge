@@ -1,4 +1,5 @@
-/**********************************************************************
+/**
+ * ********************************************************************
  * Copyright (C) 2016 Peter J Slack
  *
  * This program is free software: you can redistribute it and/or modify
@@ -14,7 +15,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 /**
  *  This is the main package for the code challenge. There files set up the data
  *  for processing by an AbstractSearchEngine class
@@ -33,9 +33,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.logging.Level;
@@ -51,8 +49,9 @@ import javax.json.JsonReader;
 import javax.json.stream.JsonParsingException;
 
 /**
- * This is a Framework Class and main entry point for the code challenge refer to @README.md
- * 
+ * This is a Framework Class and main entry point for the code challenge refer
+ * to @README.md
+ *
  */
 public final class CodeChallenge
 {
@@ -61,91 +60,103 @@ public final class CodeChallenge
      * A fixed Resource URL for products listing included in the build jar
      */
     public static final String LISTINGS_RESOURCE_PATH = "/listings.txt";
-    
+
     /**
-     * A fixed Resource URL for products listing data set included in the build jar
+     * A fixed Resource URL for products listing data set included in the build
+     * jar
      */
     public static final String PRODUCTS_RESOURCE_PATH = "/products.txt";
 
     /**
      * The raw product JSON array products are expected in JSON line format
-     * Product 
-     * { 
-     *      "product_name": String     // A unique id for the product
-     *      "manufacturer": String 
-     *      "family": String          // optional grouping of products
-     *      "model": String 
-     *      "announced-date": String // ISO-8601 formatted date
-     *                                  string, e.g. 2011-04-28T19:00:00.000-05:00 } * }
-     *  }
+     * Product { "product_name": String // A unique id for the product
+     * "manufacturer": String "family": String // optional grouping of products
+     * "model": String "announced-date": String // ISO-8601 formatted date
+     * string, e.g. 2011-04-28T19:00:00.000-05:00 } * } }
      */
     private final JsonArray products;
-    
+
     /**
-     * Listing 
-     * 
-     * { 
-     *  "title": String        // description of product for sale
-     *  "manufacturer": String // who manufactures the product for sale
-     *  "currency": String     // currency code, e.g. USD, CAD, GBP, etc. 
-     *  "price": String        // price, e.g. 19.99, 100.00 
-     * }
+     * Listing
+     *
+     * {
+     * "title": String // description of product for sale "manufacturer": String
+     * // who manufactures the product for sale "currency": String // currency
+     * code, e.g. USD, CAD, GBP, etc. "price": String // price, e.g. 19.99,
+     * 100.00 }
      */
     private final JsonArray listings;
-    
+
     /**
      * this is used to check the uniqueness of the given product set we will
      * check against, this contains a validated data set to use for the
      * processing
      */
-    private final HashMap<String, JsonObject> productKeys = new HashMap<String, JsonObject>();
-    
+    private final HashMap<String, JsonObject> productKeys = new HashMap<>();
+
     /**
      * this is used to check the uniqueness of the given product listing set we
      * will check it contains a validated data set to use for the processing
      */
-    private final HashMap<String, JsonObject> listingKeys = new HashMap<String, JsonObject>();
-    
+    private final HashMap<String, JsonObject> listingKeys = new HashMap<>();
+
     /**
-     * any listings that are duplicates we put here so we only search them once.  A listing with a different price
-     * but identical title is of no consequence to the search.  At the end of the search th implementation must 
-     * match up duplicate listings to the ones that have been matched up to a product.  
-     * 
+     * any listings that are duplicates we put here so we only search them once.
+     * A listing with a different price but identical title is of no consequence
+     * to the search. At the end of the search th implementation must match up
+     * duplicate listings to the ones that have been matched up to a product.
+     *
      */
-    private final HashMap<String,ArrayList<JsonObject>> duplicateListings = new HashMap<String,ArrayList<JsonObject>>();
-    
-    /**Field name used in listing and product list to identify manufacturer */
+    private final HashMap<String, ArrayList<JsonObject>> duplicateListings = new HashMap<>();
+
+    /**
+     * Field name used in listing and product list to identify manufacturer
+     */
     public static final String PRODUCT_MANUFACTURER_KEY = "manufacturer";
-    
-    /**Field name used in product list to identify prodcut model */
+
+    /**
+     * Field name used in product list to identify product model
+     */
     public static final String PRODUCT_MODEL_KEY = "model";
-    
-    /**Field name used in product list to identify product family */
+
+    /**
+     * Field name used in product list to identify product family
+     */
     public static final String PRODUCT_FAMILY_KEY = "family";
-    
-    /**Field name used in product list to identify the unique product name key*/
+
+    /**
+     * Field name used in product list to identify the unique product name key
+     */
     public static final String PRODUCT_NAME_KEY = "product_name";
-    
-    /**Field name used in listing to identify the title */
+
+    /**
+     * Field name used in listing to identify the title
+     */
     public static final String PRODUCT_LISTING_TITLE_KEY = "title";
 
-    /**The total number of listings imported*/
-    private  int totalListings = 0;
-    
-    /**The number of duplicate listings detected and stored in duplicate listing object*/
-    private  int numDuplicateListingsDetected =0;
-    
-    /**the total number of product definitions imported*/
-    private int numProductDefinitions=0;
-    
-    /**the number of invalid product definitions*/
-    private int numInvalidProductDefinitions=0;
-    
-    
-    
+    /**
+     * The total number of listings imported
+     */
+    private int totalListings = 0;
+
+    /**
+     * The number of duplicate listings detected and stored in duplicate listing object
+     */
+    private int numDuplicateListingsDetected = 0;
+
+    /**
+     * the total number of product definitions imported
+     */
+    private int numProductDefinitions = 0;
+
+    /**
+     * the number of invalid product definitions
+     */
+    private int numInvalidProductDefinitions = 0;
+
     /**
      * Program to test a search engine to match products to product listings
-     * 
+     *
      * @param args - no arguments required
      */
     public static void main(String[] args)
@@ -155,16 +166,7 @@ public final class CodeChallenge
         {
             c = new CodeChallenge();
 
-        } catch (NullPointerException ex)
-        {
-            Logger.getLogger(CodeChallenge.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IllegalStateException ex)
-        {
-            Logger.getLogger(CodeChallenge.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (JsonException ex)
-        {
-            Logger.getLogger(CodeChallenge.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex)
+        } catch (NullPointerException | IllegalStateException | JsonException | IOException ex)
         {
             Logger.getLogger(CodeChallenge.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -176,18 +178,17 @@ public final class CodeChallenge
 
         //TODO: allow user to enter different search implementations
         AbstractSearchEngine se = new SlackerTestMethod(c);
-        
+
         //let's see how fast this is
         long startTime = System.currentTimeMillis();
-        
+
         se.process();
-        
-	long endTime = System.currentTimeMillis();
 
-	long difference = endTime - startTime;
-        
+        long endTime = System.currentTimeMillis();
+
+        long difference = endTime - startTime;
+
         HashMap<String, ArrayList<JsonObject>> results = se.getResults();
-
 
         //TODO: allow user to enter different output file names via command line
         String outputFile = System.getProperty("user.dir") + File.separator + "codeChallenge.txt";
@@ -198,7 +199,7 @@ public final class CodeChallenge
         System.out.println("Search Implementation : " + se.getImplementationName());
         System.out.println("Description : " + se.getImplementationDescription());
         System.out.println();
-        
+
         System.out.println("*************INPUT STATISTICS**********************");
         System.out.println("Total Product Defintions   : " + c.getTotalProductDefintions());
         System.out.println("Total Invalid Defintions   : " + c.getTotalInvalidProdctListings());
@@ -224,66 +225,64 @@ public final class CodeChallenge
     }
 
     /**
-     * Dumps the results of the match up
-     * 
+     * Dumps the results of the match ups into JSON line format to the given
+     * filename
+     *
      * @param fileName - String of the full path of the filename
-     * @param results  - the result set from the match as HashMap<String<ArrayList<JsonObject>>
-     * @return dumps the list into JSON line format to the given filename
+     * @param results - the result set from the match as
+     * HashMap&lt;String&lt;ArrayList&lt;JsonObject&gt;&gt;
+     * @throws FileNotFoundException - if the file cannot be create
+     * @throws IOException - if the file cannot be written to
      */
-    public void dumpResults(String fileName,HashMap<String,ArrayList<JsonObject>> results) throws FileNotFoundException, IOException
+    public void dumpResults(String fileName, HashMap<String, ArrayList<JsonObject>> results) throws FileNotFoundException, IOException
     {
-        
- 
+
         File outputFile = new File(fileName);
-        if(outputFile.exists())
+        if (outputFile.exists())
         {
-        }
-        else
+        } else
         {
             outputFile.createNewFile();
         }
-        
+
         FileOutputStream fos = new FileOutputStream(outputFile);
- 
-	OutputStreamWriter osw = new OutputStreamWriter(fos);
-        
-        
-        for(String productName:results.keySet())
+
+        try (OutputStreamWriter osw = new OutputStreamWriter(fos))
         {
-            
-            ArrayList<JsonObject> listings = results.get(productName);
-            JsonArrayBuilder resultArray = Json.createArrayBuilder();
-            for (JsonObject j : listings)
+            for (String productName : results.keySet())
             {
-                resultArray.add(j);
+
+                ArrayList<JsonObject> listings = results.get(productName);
+                JsonArrayBuilder resultArray = Json.createArrayBuilder();
+                listings.stream().forEach((j)
+                        -> 
+                        {
+                            resultArray.add(j);
+                });
+                JsonArray outputSet = resultArray.build();
+
+                JsonObject outputValue = Json.createObjectBuilder()
+                        .add("product_name", productName)
+                        .add("listings", outputSet)
+                        .build();
+
+                String outPre = outputValue.toString();
+
+                osw.write(outPre + "\n");
+
             }
-            JsonArray outputSet = resultArray.build();
-
-            JsonObject outputValue = Json.createObjectBuilder()
-                    .add("product_name", productName)
-                    .add("listings", outputSet)
-                    .build();
-
-            String outPre = outputValue.toString();
-
-
-            osw.write(outPre + "\n");
-
         }
 
-	osw.close();
-
-
     }
-    
+
     /**
      * The main constructor for the Code Challenge
-     * 
-     * @throws NullPointerException
-     * @throws IllegalStateException
-     * @throws JsonException
-     * @throws JsonParsingException
-     * @throws IOException 
+     *
+     * @throws NullPointerException if the input stream definitions are null
+     * @throws IllegalStateException if the JSON parsing state is invalid
+     * @throws JsonException JSON errors
+     * @throws JsonParsingException JSON parsing error
+     * @throws IOException error reading the input streams
      */
     public CodeChallenge() throws NullPointerException, IllegalStateException, JsonException, JsonParsingException, IOException
     {
@@ -294,24 +293,24 @@ public final class CodeChallenge
 
         assert products != null;
         assert listings != null;
-        
-        totalListings=listings.size();
-        numProductDefinitions=products.size();
-        
+
+        totalListings = listings.size();
+        numProductDefinitions = products.size();
+
         buildKeyMaps();
-        
-        
+
     }
 
     /**
-     *  Builds the product and listing key maps for use in the search engine implementation
+     * Builds the product and listing key maps for use in the search engine
+     * implementation
      */
     private void buildKeyMaps()
     {
 
         for (int i = 0; i < listings.size(); i++)
         {
-            
+
             JsonObject j = listings.getJsonObject(i);
             checkListingEntryStructure(j);
         }
@@ -319,16 +318,18 @@ public final class CodeChallenge
         for (int i = 0; i < products.size(); i++)
         {
             JsonObject j = products.getJsonObject(i);
-            if(!checkProductEntryStructure(j))
+            if (!checkProductEntryStructure(j))
+            {
                 numInvalidProductDefinitions++;
+            }
         }
 
     }
 
     /**
-     * 
-     * @return HashMap<String, JsonObject> - the map of unique product names to the corresponding 
-     *                                       JsonObject for the product
+     *
+     * @return - the map of unique product names to the corresponding JsonObject
+     * for the product
      */
     public HashMap<String, JsonObject> getProductKeys()
     {
@@ -336,9 +337,9 @@ public final class CodeChallenge
     }
 
     /**
-     * 
-     * @return HashMap<String, JsonObject> - the hash map of unique title to the corresponding JsonObject
-     *                                       for the product listing
+     *
+     * @return - the hash map of unique title to the corresponding JsonObject
+     * for the product listing
      */
     public HashMap<String, JsonObject> getListingKeys()
     {
@@ -346,13 +347,13 @@ public final class CodeChallenge
     }
 
     /**
-     * This function checks to see if the key string is unique and places the corresponding
-     * JsonObject in the product map
-     * 
+     * This function checks to see if the key string is unique and places the
+     * corresponding JsonObject in the product map
+     *
      * @param j String - unique string for the product
      * @param obj JsonObject - JsonObject to be mapped
-     * @param map HashMap<String, JsonObject> - The hashmap that will contain the unique key mapping
-     * @return 
+     * @param map The hash map that will contain the unique key mapping
+     * @return
      */
     private boolean checkKeyUniqueness(String j, JsonObject obj, HashMap<String, JsonObject> map)
     {
@@ -366,19 +367,19 @@ public final class CodeChallenge
         } else
         {
             map.put(j, obj);
-           
+
         }
 
         return rval;
     }
 
-
     /**
-     * Verifies the structure of the product map provided in JSON
-     * and builds the unique list of products to be matched by the search engine
-     * 
+     * Verifies the structure of the product map provided in JSON and builds the
+     * unique list of products to be matched by the search engine
+     *
      * @param j JsonObject - the product entry
-     * @return boolean - true if structure is valid and product name is unique false otherwise
+     * @return boolean - true if structure is valid and product name is unique
+     * false otherwise
      */
     public boolean checkProductEntryStructure(JsonObject j)
     {
@@ -416,7 +417,8 @@ public final class CodeChallenge
             rval = false;
             Logger.getLogger(CodeChallenge.class.getName()).log(Level.WARNING, "Product key missing.. igonoring entry");
         } else //the product key uniqueness checks and enters the entry into our map
-         if (rval)
+        {
+            if (rval)
             {
                 if (!checkKeyUniqueness(productKey, j, productKeys))
                 {
@@ -424,19 +426,22 @@ public final class CodeChallenge
                     Logger.getLogger(CodeChallenge.class.getName()).log(Level.WARNING, "Product key is not unique..ignoring entry : " + productKey);
                 }
             }
+        }
 
         return rval;
     }
 
     /**
-     *  This function checks the structure of the product listing to be matched
-     *  this will build a list of duplicate titles that can be used later to merge into listings that have been matched
-     *  a duplicate listing is one that has identical title to another but may have different price or currency
-     *  the duplicate only needs to be matched once so it is put aside to be merged after the main match is done
-     * 
+     * This function checks the structure of the product listing to be matched
+     * this will build a list of duplicate titles that can be used later to
+     * merge into listings that have been matched a duplicate listing is one
+     * that has identical title to another but may have different price or
+     * currency the duplicate only needs to be matched once so it is put aside
+     * to be merged after the main match is done
+     *
      * @param j
-     * @return boolean - true if the listing structure is valid
-     *                 - false if the structure is missing fields or of the listing is not unique
+     * @return boolean - true if the listing structure is valid - false if the
+     * structure is missing fields or of the listing is not unique
      */
     private boolean checkListingEntryStructure(JsonObject j)
     {
@@ -459,82 +464,63 @@ public final class CodeChallenge
             {
                 //this is not an error, we build a list of duplicate listings to save on serach time
                 rval = true;
-                 numDuplicateListingsDetected++;
+                numDuplicateListingsDetected++;
                 //we build our dupllicate listings here for use in the end game of matching
                 // we don't want to search the same title many times.  A title can have
                 // many prices but identical listings
                 storeDuplicateListing(title, j, duplicateListings);
 
             }
-            
+
         }
         return rval;
     }
 
     /**
      * Stores a duplicate listing to a structured object for matching
+     *
      * @param title String - the title of the listing
      * @param j the json object of the original listing
      * @param listSet the set that we will store the duplicates in
      */
-    private void storeDuplicateListing(String title,JsonObject j,HashMap<String,ArrayList<JsonObject>> listSet)
+    private void storeDuplicateListing(String title, JsonObject j, HashMap<String, ArrayList<JsonObject>> listSet)
     {
-        
-        if(listSet.containsKey(title))
+
+        if (listSet.containsKey(title))
         {
             ArrayList<JsonObject> objList = listSet.get(title);
             objList.add(j);
             listSet.put(title, objList);
-        }
-        else
+        } else
         {
-            ArrayList<JsonObject> objList = new ArrayList<JsonObject>();
+            ArrayList<JsonObject> objList = new ArrayList<>();
             objList.add(j);
             listSet.put(title, objList);
         }
 
     }
-    
-    
-    /**
-     * 
-     * @return JsonArry of products
-     */
-    public JsonArray getProducts()
-    {
-        return products;
-    }
 
     /**
-     * 
-     * @return  JsonArray of listings
-     */
-    public JsonArray getListings()
-    {
-        return listings;
-    }
-
-     /**
      * Returns the duplicate listings found in the data loading phase
-     * 
-     * @return - HashMap<String,ArrayList<JsonObject>> duplicate listings 
+     *
+     * @return - duplicate listings indexed by product name
      */
-    public HashMap<String,ArrayList<JsonObject>> getDuplicateListings()
+    public HashMap<String, ArrayList<JsonObject>> getDuplicateListings()
     {
         return duplicateListings;
     }
 
-    
     /**
      * loads a JSON line formatted resource stream
-     * 
-     * @param jsonData
-     * @return
-     * @throws NullPointerException
-     * @throws JsonException
-     * @throws JsonParsingException
-     * @throws IllegalStateException
-     * @throws IOException 
+     *
+     * @param jsonData an input stream of json data to read in
+     * @return returns a json array of the input data read in from a JSON line
+     * format
+     * @throws NullPointerException - do not pass a null input stream
+     * @throws JsonException - exception parsing JSON data in the stream
+     * @throws JsonParsingException - exception parsing JSON data in the stream
+     * @throws IllegalStateException - illegal JSON state
+     * @throws IOException - error reading in stream of JSON data
      */
     public JsonArray loadResourceStream(InputStream jsonData) throws NullPointerException, JsonException,
             JsonParsingException, IllegalStateException, IOException
@@ -550,29 +536,21 @@ public final class CodeChallenge
 
         try
         {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(jsonData));
-            String line;
-            while ((line = reader.readLine()) != null)
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(jsonData)))
             {
+                String line;
+                while ((line = reader.readLine()) != null)
+                {
 
-                InputStream is = new ByteArrayInputStream(line.getBytes());
-                JsonReader jsonReader = Json.createReader(is);
-
-                JsonObject obj = jsonReader.readObject();
-                builder.add(obj);
-                jsonReader.close();
+                    InputStream is = new ByteArrayInputStream(line.getBytes());
+                    try (JsonReader jsonReader = Json.createReader(is))
+                    {
+                        JsonObject obj = jsonReader.readObject();
+                        builder.add(obj);
+                    }
+                }
             }
-            reader.close();
-        } catch (NullPointerException e)
-        {
-            throw (e);
-        } catch (JsonException e)
-        {
-            throw (e);
-        } catch (IllegalStateException e)
-        {
-            throw (e);
-        } catch (IOException e)
+        } catch (NullPointerException | JsonException | IllegalStateException | IOException e)
         {
             throw (e);
         }
@@ -582,10 +560,9 @@ public final class CodeChallenge
         return rval;
     }
 
-    
-    
     /**
-     * A function to allow our implementations to report a product Definition error
+     * A function to allow our implementations to report a product Definition
+     * error
      */
     public void reportInvalidProductDefinition()
     {
@@ -594,27 +571,40 @@ public final class CodeChallenge
 
     /**
      * Returns the total number of duplicate listings that were detected
-     * @return int - the number of duplicate listings
+     *
+     * @return the number of duplicate listings
      */
     public int getNumberOfDuplicateListings()
     {
         return numDuplicateListingsDetected;
     }
-    
+
+    /**
+     *
+     * @return the total number of listings read in
+     */
     public int getTotalListings()
     {
         return totalListings;
     }
-    
+
+    /**
+     *
+     * @return the total number of product definitions read in
+     */
     public int getTotalProductDefintions()
     {
         return numProductDefinitions;
     }
-    
+
+    /**
+     *
+     * @return detected invalid product descriptions, this includes non unique
+     * entries in the models for a manufacturer
+     */
     public int getTotalInvalidProdctListings()
     {
         return numInvalidProductDefinitions;
     }
-
 
 }

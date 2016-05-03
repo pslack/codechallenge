@@ -19,7 +19,6 @@ package com.pjslack.codechallenge.searchengine;
 import com.pjslack.codechallenge.CodeChallenge;
 import java.util.ArrayList;
 import java.util.HashMap;
-import javax.json.JsonArray;
 import javax.json.JsonObject;
 
 /**
@@ -33,23 +32,16 @@ public abstract class AbstractSearchEngine
      * An abstract method for the implementing class process and return
      * matches
      * 
-     * @return  HashMap<String,ArrayList<JsonObject>> the string is the unique product name
-     * and the ArrayList is of the listing json objects of this form:
-     * 
-     * {
-     *   "product_name": String
-     *   "listings": Array[Listing]
-     * }
      */
     public abstract void process();
     /**
     * Return the number of matches by this processor
-    * @return int - number of matches processed by this implementation 
+    * @return the number of matches processed by this implementation 
     */
     public abstract int getNumberOfMatches();
     /**
      * Return the number of listings not matched
-     * @return int - number of links that were not matched
+     * @return the number of links that were not matched
      */
     public abstract int getNumberOfMisses();
     /**
@@ -60,7 +52,7 @@ public abstract class AbstractSearchEngine
     
     /**
      * Return the matched listings
-     * @return Hashmap<String,ArrayList<JsonObject>> where the key is product_name and the arraylist of json objects
+     * @return results index by product name where the key is product_name and the arraylist of json objects
      * are the original listings that were matched up
      */
     public abstract HashMap<String, ArrayList<JsonObject>> getResults();
