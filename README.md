@@ -32,3 +32,10 @@ mvn clean install
 
 the result file will be placed in the current working directory called : codeChallenge.txt
 
+##Documetnation
+
+Javadocs can be found here
+
+http://pjslack.com/codechallenge
+
+
